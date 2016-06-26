@@ -1,4 +1,7 @@
 const electron = require('electron')
+const sqlite3 = require("sqlite3").verbose();
+const ipc = require('electron').ipcMain;
+const path = require('path');
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
@@ -7,24 +10,59 @@ const BrowserWindow = electron.BrowserWindow
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
+let db = null;
 
-function createWindow () {
-  // Create the browser window.
-  mainWindow = new BrowserWindow({width: 800, height: 600})
+ipc.on('getSearchOccurancesForKeyword', function (event, arg) {
+  var completeInner;
+  var els = []
+  db.each("SELECT word, score FROM cities WHERE word MATCH ? and score <= 170 ORDER BY score DESC;", arg, function(err, row) {
+    completeInner = new Promise(function(success, failure) {
+        db.each("SELECT actual_word, file_name FROM cities_map where word = ?;", row.word, function(err, row) {
+            els.push(row);
+        }, function() {
+            success();
+        });
+    });
+  }, function() {
+      completeInner.then(function() {
+          event.sender.send('showReccomender', els);
+      });
+  });
+});
 
-  // and load the index.html of the app.
-  mainWindow.loadURL(`file://${__dirname}/index.html`)
+function getDatabase() {
+    return new Promise(function(resolve, reject) {
+        if (db != null) {
+            reolve();
+        }
+        const dbPath = path.join(__dirname, 'db.sqlite')
+        const extPath = path.join(__dirname, 'spellfix1.so')
+        db = new sqlite3.Database(dbPath);
+        db.loadExtension(extPath, function() {
+            resolve();
+        });
+    });
+}
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools()
+function createWindow() {
+  getDatabase().then(function() {
+      // Create the browser window.
+      mainWindow = new BrowserWindow({width: 800, height: 600})
 
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
+      // and load the index.html of the app.
+      mainWindow.loadURL(`file://${__dirname}/index.html`)
+
+      // Open the DevTools.
+      mainWindow.webContents.openDevTools()
+
+      // Emitted when the window is closed.
+      mainWindow.on('closed', function () {
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
+        mainWindow = null
+      })
+  });
 }
 
 // This method will be called when Electron has finished
