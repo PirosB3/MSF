@@ -25,7 +25,8 @@ ipc.on('getSearchOccurancesForKeyword', function (event, arg) {
     });
   }, function() {
       if (!completeInner) {
-          return els;
+          event.sender.send('showReccomender', []);
+          return
       }
       completeInner.then(function() {
           event.sender.send('showReccomender', els);
@@ -56,7 +57,7 @@ function createWindow() {
       mainWindow.loadURL(`file://${__dirname}/index.html`)
 
       // Open the DevTools.
-      mainWindow.webContents.openDevTools()
+      //mainWindow.webContents.openDevTools()
 
       // Emitted when the window is closed.
       mainWindow.on('closed', function () {

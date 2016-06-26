@@ -16,7 +16,8 @@ const ipc = require('electron').ipcRenderer
 // })
 
 angular.module('matchApp', [])
-    .controller('MainController', function($scope) {
+    .controller('MainController', function($scope, $timeout) {
+                $scope.lang = "eng"
 
 		ipc.on('showReccomender', function (event, arg) {
 
@@ -53,12 +54,16 @@ angular.module('matchApp', [])
 			});
 
 		    $scope.$apply(function() {
-		    	$scope.items = items;
+                        $timeout(function(){
+		    	    $scope.items = items;
+                        });
 		    })
 		})
 
     	$scope.getMatches = function() {
     		var city = $scope.city;
-    		ipc.send('getSearchOccurancesForKeyword', city);
+                if (city.length > 0) {
+    		    ipc.send('getSearchOccurancesForKeyword', city);
+                }
     	}
     });

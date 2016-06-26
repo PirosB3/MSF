@@ -36,12 +36,20 @@
     <div class="container" ng-controller="MainController">
          
         <div class="row">
-          <div class="col-md-6 col-md-offset-3">
+          <div class="col-md-3">
+              <img src="1280px-Msf_logo.svg.png" alt="" height="50" />
+              <button ng-click="lang = 'eng'" class="btn btn-primary">English</button>
+              <button ng-click="lang = 'fr'" class="btn btn-primary">French</button>
+              <button ng-click="lang = 'it'" class="btn btn-primary">Italian</button>
+          </div>
+          <div class="col-md-6">
             <h4>Search by City</h4>
             <div class="form-group">
-              <input type="text" ng-model="city" class="form-control"/>
+              <input type="text" ng-model="city" class="form-control" ng-change="getMatches()"/>
             </div>
-            <a href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Get Matches</a>
+            <a ng-show="lang == 'eng'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Get Matches</a>
+            <a ng-show="lang == 'fr'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Obtenir les Matchs</a>
+            <a ng-show="lang == 'it'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Ottenere i risultati</a>
           </div>
         </div>
 
@@ -51,9 +59,15 @@
           <table class="table table-bordered table-striped">
             <thead>
               <tr>
-                <th>Match</th>
-                <th>Frequency</th>
-                <th>File Name</th>
+                <th ng-show="lang == 'eng'">Match</th>
+                <th ng-show="lang == 'eng'">Frequency</th>
+                <th ng-show="lang == 'eng'">File Name</th>
+                <th ng-show="lang == 'fr'">Rencontre</th>
+                <th ng-show="lang == 'fr'">Frequence</th>
+                <th ng-show="lang == 'fr'">Nom de Fischer</th>
+                <th ng-show="lang == 'it'">Risultato</th>
+                <th ng-show="lang == 'it'">Frequence</th>
+                <th ng-show="lang == 'it'">Nome del File</th>
               </tr>
             </thead>
             <tbody>
@@ -62,7 +76,9 @@
                 <td>{{ item.totalSeen }}</td>
                 <td>
                   <ul ng-repeat="(fileName, fileFreq) in item.fileCounter">
-                   <li>Seen {{ fileFreq }} times in {{ fileName }}</li>
+                    <li ng-show="lang == 'eng'">Seen {{ fileFreq }} times in {{ fileName }}</li>
+                    <li ng-show="lang == 'fr'">Vu {{ fileFreq }} fois dans {{ fileName }}</li>
+                    <li ng-show="lang == 'it'">Visto {{ fileFreq }} volte in {{ fileName }}</li>
                  </ul>
                 </td>
               </tr>
