@@ -1,22 +1,68 @@
+
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using node <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-  </body>
+<html lang="en-us">
+    <head>
+        <title>Match MD</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <meta charset="UTF-8">
 
-  <input type="text" id="termText"></input>
-  <button id="termBtn">Search</button>
+        <!-- load bootstrap and fontawesome via CDN -->
+        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+        <style>
+            html, body, input, select, textarea
+            {
+                font-size: 1.05em !important;
+            }
+        </style>
+        
+        <!-- load angular via CDN -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.js"></script>
 
-  <script>
-    // You can also require other files to run in this process
-    require('./renderer.js')
-  </script>
+    </head>
+    <body ng-app="matchApp">
+
+        <header>
+      <nav class="navbar navbar-default">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">Match MD</a>
+        </div>
+
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#"><i class="fa fa-home"></i> Home</a></li>
+        </ul>
+      </div>
+      </nav>
+    </header>
+
+    <div class="container" ng-controller="MainController">
+         
+        <div class="row">
+          <div class="col-md-6 col-md-offset-3">
+            <h4>Search by City</h4>
+            <div class="form-group">
+              <input type="text" ng-model="city" class="form-control"/>
+            </div>
+            <a href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Get Matches</a>
+          </div>
+        </div>
+
+        <ul ng-repeat="item in items">
+          <li>
+            <p>{{ item.actual_word }}<p/>
+            <p>Seen {{ item.totalSeen }} times</p>
+            <ul ng-repeat="(fileName, fileFreq) in item.fileCounter">
+              <li>Seen {{ fileFreq }} times in {{ fileName }}</li>
+            </ul>
+          </li>
+        </ul>
+
+    </div>
+
+        <script>
+          // You can also require other files to run in this process
+          require('./renderer.js')
+        </script>
+
+    </body>
 </html>
