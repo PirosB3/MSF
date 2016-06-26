@@ -6,8 +6,9 @@
         <meta http-equiv="X-UA-Compatible" content="IE=Edge">
         <meta charset="UTF-8">
 
-        <!-- load bootstrap and fontawesome via CDN -->
-        <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+        <!-- load bootstrap and fontawesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" >
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">
         <style>
             html, body, input, select, textarea
             {
@@ -25,12 +26,9 @@
       <nav class="navbar navbar-default">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="/">Match MD</a>
+          <a class="navbar-brand" href="/">Patient Origin</a>
         </div>
 
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="#"><i class="fa fa-home"></i> Home</a></li>
-        </ul>
       </div>
       </nav>
     </header>
@@ -47,7 +45,33 @@
           </div>
         </div>
 
-        <ul ng-repeat="item in items">
+        <br>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Match</th>
+                <th>Frequency</th>
+                <th>File Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="item in items">
+                <td>{{ item.actual_word }}</td>
+                <td>{{ item.totalSeen }}</td>
+                <td>
+                  <ul ng-repeat="(fileName, fileFreq) in item.fileCounter">
+                   <li>Seen {{ fileFreq }} times in {{ fileName }}</li>
+                 </ul>
+                </td>
+              </tr>
+            </tbody>
+           </table> 
+          </div>
+
+
+<!--         <ul ng-repeat="item in items">
           <li>
             <p>{{ item.actual_word }}<p/>
             <p>Seen {{ item.totalSeen }} times</p>
@@ -55,7 +79,7 @@
               <li>Seen {{ fileFreq }} times in {{ fileName }}</li>
             </ul>
           </li>
-        </ul>
+        </ul> -->
 
     </div>
 
