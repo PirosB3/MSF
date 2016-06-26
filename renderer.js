@@ -19,6 +19,10 @@ angular.module('matchApp', [])
     .controller('MainController', function($scope, $timeout) {
                 $scope.lang = "eng"
 
+		ipc.on('uploadComplete', function (event, arg) {
+                    alert("" + arg + " rows were uploaded successfully");
+                });
+
 		ipc.on('showReccomender', function (event, arg) {
 
 			var wordMap = {}
@@ -59,6 +63,10 @@ angular.module('matchApp', [])
                         });
 		    })
 		})
+
+        $scope.openFileDialog = function() {
+    	    ipc.send('uploadNewFile');
+        }
 
     	$scope.getMatches = function() {
     		var city = $scope.city;
