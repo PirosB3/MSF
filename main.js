@@ -24,6 +24,9 @@ ipc.on('getSearchOccurancesForKeyword', function (event, arg) {
         });
     });
   }, function() {
+      if (!completeInner) {
+          return els;
+      }
       completeInner.then(function() {
           event.sender.send('showReccomender', els);
       });

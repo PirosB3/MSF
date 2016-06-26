@@ -1,8 +1,12 @@
 const ipc = require('electron').ipcRenderer
-const asyncMsgBtn = document.getElementById('lorem')
+const termBtn = document.getElementById('termBtn')
+const termText = document.getElementById('termText')
 
-asyncMsgBtn.addEventListener('click', function () {
-  ipc.send('getSearchOccurancesForKeyword', 'abu')
+termBtn.addEventListener('click', function () {
+  var value = termText.value;
+  if (value.length > 0) {
+      ipc.send('getSearchOccurancesForKeyword', value)
+  }
 })
 
 ipc.on('showReccomender', function (event, arg) {
