@@ -72,6 +72,8 @@ angular.module('matchApp', [])
     		var city = $scope.city;
                 if (city.length > 0) {
     		    ipc.send('getSearchOccurancesForKeyword', city);
+                } else {
+                    $scope.items = [];
                 }
     	}
     });
