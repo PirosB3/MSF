@@ -57,6 +57,8 @@ var uploadCSVFile = function(data, filename) {
 
 ipc.on('uploadNewFile', function (event, arg) {
     dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}, function(filenames) {
+        if (!filenames) return;
+
         let filename = filenames[0];
         let extension = path.extname(filename);
         let basename = path.basename(filename);
@@ -122,7 +124,11 @@ function getDatabase() {
         const extPath = path.join(__dirname, 'spellfix1.so')
         db = new sqlite3.Database(dbPath);
         db.loadExtension(extPath, function() {
-            resolve();
+            db.run('CREATE VIRTUAL TABLE IF NOT EXISTS cities using spellfix1', function() { 
+                db.run('CREATE TABLE IF NOT EXISTS cities_map(word TEXT, actual_word TEXT, file_name TEXT)', function() {
+                    resolve();
+                });
+            });
         });
     });
 }
