@@ -16,7 +16,7 @@ const readTypeForExtension = {
     '.xls': 'binary',
     '.xlsx': 'binary',
     '.csv': 'utf8',
-}
+};
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -87,7 +87,10 @@ ipc.on('uploadNewFile', function (event, arg) {
             }
 
             Promise.all(to_process).then(function(lineCount) {
-                event.sender.send('uploadComplete', lineCount);
+                let totalLineCount = lineCount.reduce(function(a, b) {
+                    return a + b;
+                }, 0);
+                event.sender.send('uploadComplete', totalLineCount);
             });
         });
     });
@@ -125,7 +128,7 @@ function getDatabase() {
         db = new sqlite3.Database(dbPath);
         db.loadExtension(extPath, function() {
             db.run('CREATE VIRTUAL TABLE IF NOT EXISTS cities using spellfix1', function() { 
-                db.run('CREATE TABLE IF NOT EXISTS cities_map(word TEXT, actual_word TEXT, file_name TEXT)', function() {
+                db.run('CREATE TABLE IF NOT EXISTS cities_map(word TEXT NOT NULL, actual_word TEXT NOT NULL, file_name TEXT NOT NULL)', function() {
                     resolve();
                 });
             });

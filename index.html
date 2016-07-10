@@ -50,12 +50,9 @@
              <div class="form-group">
               <input type="text" ng-model="city" class="form-control" ng-change="getMatches()"/>
              </div>
-             <a ng-show="lang == 'eng'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Get Matches</a>
-             <a ng-show="lang == 'fr'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Obtenir les Matchs</a>
-             <a ng-show="lang == 'it'" href="#/forecast" class="btn btn-primary" ng-click="getMatches()">Ottenere i risultati</a>
-           </div>
-           <div class="col-md-3">
-              <button ng-click="openFileDialog();" class="btn btn-link">Import file</button>
+             <a ng-show="lang == 'eng'" href="#/forecast" class="btn btn-primary" ng-click="openFileDialog()">Import file</a>
+             <a ng-show="lang == 'fr'" href="#/forecast" class="btn btn-primary" ng-click="openFileDialog()">Importer le fichier</a>
+             <a ng-show="lang == 'it'" href="#/forecast" class="btn btn-primary" ng-click="openFileDialog()">Importare un file</a>
            </div>
         </div>
 
