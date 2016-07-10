@@ -1,3 +1,4 @@
+const XLSX = require('xlsx');
 const fs = require('fs');
 const electron = require('electron')
 const sqlite3 = require("sqlite3").verbose();
@@ -8,6 +9,14 @@ const path = require('path');
 const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
+
+const TO_PROCESS_EXTENSIONS = ['.xls', '.xlsx'];
+const AVAILABLE_EXTENSIONS = ['.xls', '.xlsx', '.csv'];
+const readTypeForExtension = {
+    '.xls': 'binary',
+    '.xlsx': 'binary',
+    '.csv': 'utf8',
+}
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -49,11 +58,33 @@ var uploadCSVFile = function(data, filename) {
 ipc.on('uploadNewFile', function (event, arg) {
     dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}, function(filenames) {
         let filename = filenames[0];
-        fs.readFile(filename, 'utf8', function (err,data) {
+        let extension = path.extname(filename);
+        let basename = path.basename(filename);
+
+        if (AVAILABLE_EXTENSIONS.indexOf(extension) == -1) {
+            event.sender.send('uploadFailed');
+            return;
+        }
+
+        let readType = readTypeForExtension[extension]
+        fs.readFile(filename, readType, function (err, data) {
             if (err) {
                 return console.log(err);
             }
-            uploadCSVFile(data, path.basename(filename)).then(function(lineCount) {
+
+            let to_process = [];
+            if (TO_PROCESS_EXTENSIONS.indexOf(extension) != -1) {
+                let doc = XLSX.read(data, {type: 'binary'});
+                doc.SheetNames.forEach(function(sheetName) {
+                    let sheet = XLSX.utils.sheet_to_csv(doc.Sheets[sheetName]);
+                    console.log(sheetName);
+                    to_process.push(uploadCSVFile(sheet, sheetName));
+                });
+            } else {
+                to_process.push(uploadCSVFile(data, basename));
+            }
+
+            Promise.all(to_process).then(function(lineCount) {
                 event.sender.send('uploadComplete', lineCount);
             });
         });
