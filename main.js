@@ -14,40 +14,48 @@ const BrowserWindow = electron.BrowserWindow
 let mainWindow
 let db = null;
 
+
+var uploadCSVFile = function(data, filename) {
+    var completion = [];
+    var lineCount = 0;
+    var lines = data.split('\n')
+    lines.forEach(function(line) {
+        var words = line.split(',');
+        words.forEach(function(word) {
+            completion.push(new Promise(function(resolve, reject) {
+                if (word.length > 0) {
+                    db.run('INSERT INTO cities(word) VALUES (?);', word.toLowerCase().trim(), function() {
+                      db.run('INSERT INTO cities_map(word, actual_word, file_name) VALUES (?, ?, ?);',
+                          word.toLowerCase().trim(), word.trim(), 
+                          filename,
+                          function() {
+                              lineCount++;
+                              resolve();
+                          }
+                      );
+                    });
+                } else {
+                    resolve();
+                }
+            }));
+        });
+    });
+    return Promise.all(completion).then(function() {
+        return lineCount;
+    });
+}
+
+
 ipc.on('uploadNewFile', function (event, arg) {
     dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}, function(filenames) {
         let filename = filenames[0];
         fs.readFile(filename, 'utf8', function (err,data) {
-          var completion = [];
-          if (err) {
-            return console.log(err);
-          }
-          var lineCount = 0;
-          var lines = data.split('\n')
-          lines.forEach(function(line) {
-              var words = line.split(',');
-              words.forEach(function(word) {
-                  completion.push(new Promise(function(resolve, reject) {
-                      if (word.length > 0) {
-                          db.run('INSERT INTO cities(word) VALUES (?);', word.toLowerCase().trim(), function() {
-                            db.run('INSERT INTO cities_map(word, actual_word, file_name) VALUES (?, ?, ?);',
-                                word.toLowerCase().trim(), word.trim(), 
-                                path.basename(filename),
-                                function() {
-                                    lineCount++;
-                                    resolve();
-                                }
-                            );
-                          });
-                      } else {
-                          resolve();
-                      }
-                  }));
-              });
-          });
-          Promise.all(completion).then(function() {
+            if (err) {
+                return console.log(err);
+            }
+            uploadCSVFile(data, path.basename(filename)).then(function(lineCount) {
                 event.sender.send('uploadComplete', lineCount);
-          });
+            });
         });
     });
 });
