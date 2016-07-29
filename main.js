@@ -1,16 +1,100 @@
+const XLSX = require('xlsx');
+const fs = require('fs');
 const electron = require('electron')
 const sqlite3 = require("sqlite3").verbose();
 const ipc = require('electron').ipcMain;
+const dialog = require('electron').dialog;
 const path = require('path');
 // Module to control application life.
 const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const TO_PROCESS_EXTENSIONS = ['.xls', '.xlsx'];
+const AVAILABLE_EXTENSIONS = ['.xls', '.xlsx', '.csv'];
+const readTypeForExtension = {
+    '.xls': 'binary',
+    '.xlsx': 'binary',
+    '.csv': 'utf8',
+};
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 let db = null;
+
+
+var uploadCSVFile = function(data, filename) {
+    var completion = [];
+    var lineCount = 0;
+    var lines = data.split('\n')
+    lines.forEach(function(line) {
+        var words = line.split(',');
+        words.forEach(function(word) {
+            completion.push(new Promise(function(resolve, reject) {
+                if (word.length > 0) {
+                    db.run('INSERT INTO cities(word) VALUES (?);', word.toLowerCase().trim(), function() {
+                      db.run('INSERT INTO cities_map(word, actual_word, file_name) VALUES (?, ?, ?);',
+                          word.toLowerCase().trim(), word.trim(), 
+                          filename,
+                          function() {
+                              lineCount++;
+                              resolve();
+                          }
+                      );
+                    });
+                } else {
+                    resolve();
+                }
+            }));
+        });
+    });
+    return Promise.all(completion).then(function() {
+        return lineCount;
+    });
+}
+
+
+ipc.on('uploadNewFile', function (event, arg) {
+    dialog.showOpenDialog({properties: ['openFile', 'openDirectory', 'multiSelections']}, function(filenames) {
+        if (!filenames) return;
+
+        let filename = filenames[0];
+        let extension = path.extname(filename);
+        let basename = path.basename(filename);
+
+        if (AVAILABLE_EXTENSIONS.indexOf(extension) == -1) {
+            event.sender.send('uploadFailed');
+            return;
+        }
+
+        let readType = readTypeForExtension[extension]
+        fs.readFile(filename, readType, function (err, data) {
+            if (err) {
+                return console.log(err);
+            }
+
+            let to_process = [];
+            if (TO_PROCESS_EXTENSIONS.indexOf(extension) != -1) {
+                let doc = XLSX.read(data, {type: 'binary'});
+                doc.SheetNames.forEach(function(sheetName) {
+                    let sheet = XLSX.utils.sheet_to_csv(doc.Sheets[sheetName]);
+                    console.log(sheetName);
+                    to_process.push(uploadCSVFile(sheet, sheetName));
+                });
+            } else {
+                to_process.push(uploadCSVFile(data, basename));
+            }
+
+            Promise.all(to_process).then(function(lineCount) {
+                let totalLineCount = lineCount.reduce(function(a, b) {
+                    return a + b;
+                }, 0);
+                event.sender.send('uploadComplete', totalLineCount);
+            });
+        });
+    });
+});
 
 ipc.on('getSearchOccurancesForKeyword', function (event, arg) {
   var completeInner;
@@ -43,7 +127,11 @@ function getDatabase() {
         const extPath = path.join(__dirname, 'spellfix1.so')
         db = new sqlite3.Database(dbPath);
         db.loadExtension(extPath, function() {
-            resolve();
+            db.run('CREATE VIRTUAL TABLE IF NOT EXISTS cities using spellfix1', function() { 
+                db.run('CREATE TABLE IF NOT EXISTS cities_map(word TEXT NOT NULL, actual_word TEXT NOT NULL, file_name TEXT NOT NULL)', function() {
+                    resolve();
+                });
+            });
         });
     });
 }
